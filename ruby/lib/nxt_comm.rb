@@ -48,7 +48,7 @@ class String
     self.each_byte {|b| str << '0x%02x ' % b}
     str
   end
-  
+
   def from_hex_str
     data = self.split(' ')
     str = ""
@@ -74,9 +74,9 @@ $INTERFACE ||= nil
 # Low-level interface for communicating directly with the NXT via
 # a Bluetooth serial port.  Implements direct commands outlined in
 # Appendix 2-LEGO MINDSTORMS NXT Direct Commands.pdf
-# 
+#
 # Not all functionality is implemented yet!
-# 
+#
 # For instructions on creating a bluetooth serial port connection:
 # * Linux: http://juju.org/articles/2006/10/22/bluetooth-serial-port-to-nxt-in-linux
 # * OSX: http://juju.org/articles/2006/10/22/bluetooth-serial-port-to-nxt-in-osx
@@ -87,7 +87,7 @@ $INTERFACE ||= nil
 # First create a new NXTComm object and pass the device.
 #
 #   @nxt = NXTComm.new("/dev/tty.NXT-DevB-1")
-# 
+#
 # Rotate the motor connected to port B forwards indefinitely at 100% power:
 #
 #   @nxt.set_output_state(
@@ -99,11 +99,11 @@ $INTERFACE ||= nil
 #     NXTComm::MOTOR_RUN_STATE_RUNNING,
 #     0
 #   )
-# 
+#
 # Play a tone at 1000 Hz for 500 ms:
 #
 #   @nxt.play_tone(1000,500)
-# 
+#
 # Print out the current battery level:
 #
 #   puts "Battery Level: #{@nxt.get_battery_level/1000.0} V"
@@ -117,36 +117,36 @@ class NXTComm
   USB_TIMEOUT        = 1000
   USB_READSIZE       = 64
   USB_INTERFACE      = 0
-  
+
   # sensors
   SENSOR_1  = 0x00
   SENSOR_2  = 0x01
   SENSOR_3  = 0x02
   SENSOR_4  = 0x03
-  
+
   # motors
   MOTOR_A   = 0x00
   MOTOR_B   = 0x01
   MOTOR_C   = 0x02
   MOTOR_ALL = 0xFF
-  
+
   # output mode
   COAST     = 0x00 # motor will rotate freely?
   MOTORON   = 0x01 # enables PWM power according to speed
   BRAKE     = 0x02 # voltage is not allowed to float between PWM pulses, improves accuracy, uses more power
   REGULATED = 0x04 # required in conjunction with output regulation mode setting
-  
+
   # output regulation mode
   REGULATION_MODE_IDLE        = 0x00 # disables regulation
   REGULATION_MODE_MOTOR_SPEED = 0x01 # auto adjust PWM duty cycle if motor is affected by physical load
   REGULATION_MODE_MOTOR_SYNC  = 0x02 # attempt to keep rotation in sync with another motor that has this set, also involves turn ratio
-  
+
   # output run state
   MOTOR_RUN_STATE_IDLE        = 0x00 # disables power to motor
   MOTOR_RUN_STATE_RAMPUP      = 0x10 # ramping to a new SPEED set-point that is greater than the current SPEED set-point
   MOTOR_RUN_STATE_RUNNING     = 0x20 # enables power to motor
   MOTOR_RUN_STATE_RAMPDOWN    = 0x40 # ramping to a new SPEED set-point that is less than the current SPEED set-point
-  
+
   # sensor type
   NO_SENSOR           = 0x00
   SWITCH              = 0x01
@@ -161,7 +161,7 @@ class NXTComm
   LOWSPEED            = 0x0A
   LOWSPEED_9V         = 0x0B
   NO_OF_SENSOR_TYPES  = 0x0C
-  
+
   # sensor mode
   RAWMODE             = 0x00 # report scaled value equal to raw value
   BOOLEANMODE         = 0x20 # report scaled value as 1 true or 0 false, false if raw value > 55% of total range, true if < 45%
@@ -173,7 +173,7 @@ class NXTComm
   ANGLESTEPSMODE      = 0xE0 # report scaled value as count of ticks on RCX-style rotation sensor
   SLOPEMASK           = 0x1F
   MODEMASK            = 0xE0
-  
+
   @@op_codes = {
     # Direct Commands
     'start_program'             => ["direct",0x00],
@@ -223,7 +223,7 @@ class NXTComm
     'read_io_map'               => ["system",0x94],
     'write_io_map'              => ["system",0x95]
   }
-  
+
   @@error_codes = {
     # Direct Commands
     0x20 => "Pending communication transaction in progress",
@@ -264,22 +264,22 @@ class NXTComm
     0x92 => "Illegal file name",
     0x93 => "Illegal handle"
   }
-  
+
   @@mutex = Mutex.new
 
   # Create a new instance of NXTComm.
   # Be careful not to create more than one NXTComm object per serial port dev.
-  # If two NXTComms try to talk to the same dev, there will be trouble. 
+  # If two NXTComms try to talk to the same dev, there will be trouble.
   def initialize(dev = nil)
-  
+
     dev ||= $DEV
-  
+
     @@mutex.synchronize do
       begin
         if dev
           @connection_type = "serialport"
           @sp = SerialPort.new(dev, 57600, 8, 1, SerialPort::NONE)
-      
+
           @sp.flow_control = SerialPort::HARD
           @sp.read_timeout = 5000
           $stderr.puts "Cannot connect to #{dev}" if @sp.nil?
@@ -302,7 +302,7 @@ class NXTComm
         raise "Cannot connect. The #{@connection_type} device is busy or unavailable."
       end
     end
-    
+
     puts "Connected to: #{@connection_type} #{dev || @interface}" if $DEBUG
   end
 
@@ -320,7 +320,7 @@ class NXTComm
       end
     end
   end
-  
+
   # Returns true if the connection to the NXT is open; false otherwise
   def connected?
     case @connection_type
@@ -338,7 +338,7 @@ class NXTComm
     # else
     #   request_reply = false
     # end
-    
+
     case op[0]
     when "direct"
       request_reply ? command_byte = [0x00] : command_byte = [0x80]
@@ -346,13 +346,13 @@ class NXTComm
       request_reply ? command_byte = [0x01] : command_byte = [0x81]
     end
     msg = command_byte + [op[1]] + cmd + [0x00]
-    
+
     send_cmd(msg)
-    
+
     if request_reply
       ok,response = recv_reply
-    
-      if ok and response[1] == op[1]
+
+      if ok and response[1].unpack('C')[0] == op[1]
         data = response[3..response.size]
         # TODO ? if data contains a \n character, ruby seems to pass the parts before and after the \n
         # as two different parameters... we need to encode the data into a format that doesn't
@@ -370,7 +370,7 @@ class NXTComm
     end
     data
   end
-  
+
   # Send direct command bytes
   def send_cmd(msg)
     @@mutex.synchronize do
@@ -390,13 +390,13 @@ class NXTComm
       end
     end
   end
-  
+
   # Process the reply
   def recv_reply
     @@mutex.synchronize do
       begin
         msg = ""
-        
+
         case @connection_type
         when "serialport"
           # while (len_header = @sp.sysread(2))
@@ -404,11 +404,11 @@ class NXTComm
           # end
           len_header = @sp.sysread(2)
           msg = @sp.sysread(len_header.unpack("v")[0])
-        when "usb"        
+        when "usb"
           # ruby-usb is a little odd with usb_bulk_read, instead of passing a read size, you pass a string
           # that is of the size you want to read...
           USB_READSIZE.times do
-            msg << " " 
+            msg << " "
           end
           len_header = @usb.usb_bulk_read(USB_IN_ENDPOINT, msg, USB_TIMEOUT)
           msg = msg[0..(len_header - 1)].to_s
@@ -417,23 +417,23 @@ class NXTComm
 
       # rescue EOFError
       rescue
-      	raise "Cannot read from the NXT. Make sure the device is on and connected."
+        raise "Cannot read from the NXT. Make sure the device is on and connected."
       end
-      
+
       puts "Received Message: #{len_header.to_hex_str}#{msg.to_hex_str}" if $DEBUG
-  
-      if msg[0] != 0x02
+
+      if msg[0].unpack('C')[0] != 0x02
         error = "ERROR: Returned something other then a reply telegram"
         return [false,error]
       end
-  
-      if msg[2] != 0x00
-        error = "ERROR: #{@@error_codes[msg[2]]}"
+
+      if msg[2].unpack('C')[0] != 0x00
+        error = "ERROR: #{@@error_codes[int_msg[2]]}"
         return [false,error]
       end
-  
+
       return [true,msg]
-      
+
     end
   end
 
@@ -506,7 +506,7 @@ class NXTComm
     result = true if result == ""
     result
   end
-  
+
   # Get the state of the output motor port.
   # * <tt>port</tt> - output port (MOTOR_A, MOTOR_B, MOTOR_C)
   # Returns a hash with the following info (enumerated values see: set_output_state):
@@ -531,7 +531,7 @@ class NXTComm
       (7..9).each do |i|
         result_parts[i] = result_parts[i].as_signed if result_parts[i].kind_of? Bignum
       end
-    
+
       {
         :port               => result_parts[0],
         :power              => result_parts[1],
@@ -548,16 +548,16 @@ class NXTComm
       false
     end
   end
-  
+
   # Get the current values from an input sensor port.
   # * <tt>port</tt> - input port (SENSOR_1, SENSOR_2, SENSOR_3, SENSOR_4)
   # Returns a hash with the following info (enumerated values see: set_input_mode):
   #   {
   #     :port             => see: input ports,
-  #     :valid            => boolean, true if new data value should be seen as valid data, 
-  #     :calibrated       => boolean, true if calibration file found and used for 'Calibrated Value' field below, 
-  #     :type             => see: sensor types, 
-  #     :mode             => see: sensor modes, 
+  #     :valid            => boolean, true if new data value should be seen as valid data,
+  #     :calibrated       => boolean, true if calibration file found and used for 'Calibrated Value' field below,
+  #     :type             => see: sensor types,
+  #     :mode             => see: sensor modes,
   #     :value_raw        => raw A/D value (device dependent),
   #     :value_normal     => normalized A/D value (0 - 1023),
   #     :value_scaled     => scaled value (mode dependent),
@@ -644,7 +644,7 @@ class NXTComm
     result = true if result == ""
     result
   end
-  
+
   # Returns the battery voltage in millivolts.
   def get_battery_level
     cmd = []
@@ -674,10 +674,10 @@ class NXTComm
     result = send_and_receive @@op_codes["ls_get_status"], cmd
     result[0]
   end
-  
+
   # Write data to lowspeed I2C port (for talking to the ultrasonic sensor)
   # * <tt>port</tt> - input port (SENSOR_1, SENSOR_2, SENSOR_3, SENSOR_4)
-  # * <tt>i2c_msg</tt> - the I2C message to send to the lowspeed controller; the first byte 
+  # * <tt>i2c_msg</tt> - the I2C message to send to the lowspeed controller; the first byte
   #   specifies the transmitted data length, the second byte specifies the expected respone
   #   data length, and the remaining 16 bytes are the transmitted data. See UltrasonicComm
   #   for an example of an I2C sensor protocol implementation.
@@ -690,7 +690,7 @@ class NXTComm
     result = true if result == ""
     result
   end
-  
+
   # Read data from from lowspeed I2C port (for receiving data from the ultrasonic sensor)
   # * <tt>port</tt> - input port (SENSOR_1, SENSOR_2, SENSOR_3, SENSOR_4)
   # Returns a hash containing:
@@ -715,7 +715,7 @@ class NXTComm
       false
     end
   end
-  
+
   # Returns the name of the program currently running on the NXT.
   # Returns an error If no program is running.
   def get_current_program_name
@@ -734,7 +734,7 @@ class NXTComm
     result = send_and_receive @@op_codes["message_read"], cmd
     result == false ? false : result[2..-1].from_hex_str.unpack("A*")[0]
   end
-  
+
   # Returns the firmware's protocol version and firmware version in a hash:
   #  {
   #    :protocol => "1.124",
@@ -753,7 +753,7 @@ class NXTComm
       false
     end
   end
-  
+
   # Returns a hash of information about the nxt:
   #  {
   #    :name    => name of the brick,
@@ -776,7 +776,7 @@ class NXTComm
       false
     end
   end
-  
+
   # Set the name of the nxt.  Max length 15 characters.
   def set_brick_name(name="NXT")
     raise "name too large" if name.size > 15
@@ -788,14 +788,14 @@ class NXTComm
     result = true if result == ""
     result
   end
-  
+
   # Closes an open file handle.  Returns the handle number on success.
   def close_handle(handle)
     cmd = [handle]
     result = send_and_receive @@op_codes["close_handle"], cmd
     result ? result.from_hex_str.unpack("C")[0] : false
   end
-  
+
   # Find a file in flash memory.  The following wildcards are allowed:
   # * [filename].[extension]
   # * *.[file type name]
@@ -810,7 +810,7 @@ class NXTComm
   #    :size    => size of the file in bytes
   #  }
   #
-  # This command creates a file handle within the nxt, so remember to use 
+  # This command creates a file handle within the nxt, so remember to use
   # close_handle command to release it.  Handle will automatically be released
   # if it encounters an error.
   def find_first(name="*.*")
@@ -831,7 +831,7 @@ class NXTComm
       false
     end
   end
-  
+
   # Find the next file from a previously found file handle like from the
   # find_first command.
   #
@@ -843,7 +843,7 @@ class NXTComm
   #  }
   #
   # The handle passed will change to the next file found, don't forget to
-  # release the handle with close_handle command.  When it runs out of files, it 
+  # release the handle with close_handle command.  When it runs out of files, it
   # will return false and handle will be released.
   def find_next(handle)
     cmd = [handle]
@@ -859,7 +859,7 @@ class NXTComm
       false
     end
   end
-  
+
   # Open a file to read from.
   #
   # Returns a has with the following info:
@@ -868,7 +868,7 @@ class NXTComm
   #    :size   => size of the file in bytes (FIXME: size returned doesn't appear to be correct?)
   #  }
   #
-  # This command creates a file handle within the nxt, so remember to use 
+  # This command creates a file handle within the nxt, so remember to use
   # close_handle command to release it.  Handle will automatically be released
   # if it encounters an error.
   def open_read(name)
@@ -889,11 +889,11 @@ class NXTComm
     end
   end
 
-  # Open and return a write handle number for creating a new file with 
-  # the write command.  You must specify the filename and the desired 
+  # Open and return a write handle number for creating a new file with
+  # the write command.  You must specify the filename and the desired
   # size of the file in bytes.
   #
-  # This command creates a file handle within the nxt, so remember to use 
+  # This command creates a file handle within the nxt, so remember to use
   # close_handle command to release it.  Handle will automatically be released
   # if it encounters an error.
   def open_write(name,size=100)
@@ -910,14 +910,14 @@ class NXTComm
   end
 
   # Write data to a handle created with the open_write command.
-  # 
+  #
   # Returns a hash containing:
   #  {
   #    :handle => the handle you're working with,
   #    :size   => the size in bytes of the data that has been written to flash
   #  }
   #
-  # FIXME: I can't seem to get this to work, it always gives an error saying 
+  # FIXME: I can't seem to get this to work, it always gives an error saying
   # "End of file expected"
   def write_file(handle,data="")
     cmd = [handle]
