@@ -16,7 +16,7 @@
 
 require "yaml"
 require "logger"
-require "nxt_comm"
+# require "nxt_comm"
 
 #Logger::Formatter::Format = "%s, [%s#%d] %5s -- %s:\n%s\n"
 
@@ -41,7 +41,7 @@ class Brick
 
   private
     def debug(msg, method = false)
-      @log.info(method) do 
+      @log.info(method) do
         if msg.kind_of? String
           msg
         else

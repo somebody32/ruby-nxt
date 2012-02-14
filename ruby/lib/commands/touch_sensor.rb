@@ -16,7 +16,7 @@
 
 # require File.dirname(File.expand_path(__FILE__))+'/../nxt_comm'
 # require File.dirname(File.expand_path(__FILE__))+'/mixins/sensor'
-require "nxt_comm"
+# require "nxt_comm"
 require "commands/mixins/sensor"
 
 # Implements the "Touch Sensor" block in NXT-G
@@ -25,13 +25,13 @@ class Commands::TouchSensor
   include Commands::Mixins::Sensor
 
   attr_reader :port, :action
-  
-  def initialize(nxt)
+
+  def initialize(nxt,port=1,action=:pressed)
     @nxt      = nxt
-    
+
     # defaults the same as NXT-G
-    @port   = 1
-    @action = :pressed
+    @port   = port
+    @action = action
     set_mode
   end
 
@@ -40,9 +40,9 @@ class Commands::TouchSensor
     set_mode
   end
   alias trigger_point= action=
-  
+
   def comparison=(op)
-  	raise NotImplementedError, "Cannot assign a comparison operator for this sensor type."
+    raise NotImplementedError, "Cannot assign a comparison operator for this sensor type."
   end
 
   # returns true or false based on action type
@@ -56,17 +56,17 @@ class Commands::TouchSensor
         value_scaled > 0 ? true : false
     end
   end
-  
+
   # returns the raw value of the sensor
   def raw_value
     value_raw
   end
-  
+
   # resets the value_scaled property, use this to reset the sensor when in :bumped mode
   def reset
     @nxt.reset_input_scaled_value(NXTComm.const_get("SENSOR_#{@port}"))
   end
-  
+
   # sets up the sensor port
   def set_mode
     @action == :bumped ? mode = NXTComm::PERIODCOUNTERMODE : mode = NXTComm::BOOLEANMODE
@@ -76,7 +76,7 @@ class Commands::TouchSensor
       mode
     )
   end
-  
+
   # attempt to return the input_value requested
   def method_missing(cmd)
     @nxt.get_input_values(NXTComm.const_get("SENSOR_#{@port}"))[cmd]

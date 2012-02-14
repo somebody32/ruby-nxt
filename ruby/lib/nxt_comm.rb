@@ -161,6 +161,19 @@ class NXTComm
   LOWSPEED            = 0x0A
   LOWSPEED_9V         = 0x0B
   NO_OF_SENSOR_TYPES  = 0x0C
+  COLORFULL						= 0x0D
+  COLORRED						= 0x0E
+  COLORBLUE						= 0x0F
+  COLORGREEN					= 0x10
+  COLORNONE           = 0x11
+
+  # colors
+  BLACK								= 0x01
+  BLUE								= 0x02
+  GREEN								= 0x03
+  YELLOW							= 0x04
+  RED									= 0x05
+  WHITE								= 0x06
 
   # sensor mode
   RAWMODE             = 0x00 # report scaled value equal to raw value
@@ -428,7 +441,7 @@ class NXTComm
       end
 
       if msg[2].unpack('C')[0] != 0x00
-        error = "ERROR: #{@@error_codes[int_msg[2]]}"
+        error = "ERROR: #{@@error_codes[msg[2]]}"
         return [false,error]
       end
 

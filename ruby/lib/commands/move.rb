@@ -14,23 +14,23 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-require "nxt_comm"
+# require "nxt_comm"
 require "commands/mixins/motor"
 
 # Implements the "Move" block in NXT-G
 class Commands::Move
 
-  include Commands::Mixins::Motor 
-  
+  include Commands::Mixins::Motor
+
   attr_reader   :ports
   attr_accessor :direction
   attr_accessor :left_motor, :right_motor
   attr_accessor :power
   attr_accessor :next_action
-  
+
   def initialize(nxt = NXTComm.new($DEV))
     @nxt          = nxt
-    
+
     # defaults the same as NXT-G
     @ports        = [:b, :c]
     @direction    = :forward
@@ -84,7 +84,7 @@ class Commands::Move
     end
   end
   alias steering turn_ratio
-  
+
 
   # execute the Move command based on the properties specified
   def start
@@ -108,7 +108,7 @@ class Commands::Move
     else
       reg_mode = NXTComm::REGULATION_MODE_IDLE
     end
-    
+
     if @ports.include?(:a) and @ports.include?(:b) and @ports.include?(:c)
       @nxt.set_output_state(
         NXTComm::MOTOR_ALL,
@@ -132,7 +132,7 @@ class Commands::Move
         )
       end
     end
-    
+
     unless @duration.nil?
       if @duration[:seconds]
         sleep(@duration[:seconds])
@@ -144,7 +144,7 @@ class Commands::Move
       self.stop
     end
   end
-  
+
   # stop the Move command based on the next_action property
   def stop
     if @next_action == :brake
@@ -197,7 +197,7 @@ class Commands::Move
       end
     end
   end
-  
+
   # attempt to return the output_state requested
   def method_missing(cmd)
     states = {}
@@ -206,5 +206,5 @@ class Commands::Move
     end
     states
   end
-  
+
 end

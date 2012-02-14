@@ -14,20 +14,20 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-require "nxt_comm"
+# require "nxt_comm"
 require "commands/mixins/sensor"
 
 # Implements the "Sound Sensor" block in NXT-G
 class Commands::SoundSensor
-  
+
   include Commands::Mixins::Sensor
-  
+
   attr_reader :port, :mode
   attr_accessor :trigger_point, :comparison
-  
+
   def initialize(nxt)
     @nxt      = nxt
-    
+
     # defaults the same as NXT-G
     @port           = 2
     @trigger_point  = 50
@@ -35,22 +35,22 @@ class Commands::SoundSensor
     @mode           = "dba"
     set_mode
   end
-  
+
   def mode=(mode)
     @mode = mode
     set_mode
   end
-  
+
   # scaled value read from sensor
   def sound_level
     value_scaled
   end
-  
+
   # returns the raw value of the sensor
   def raw_value
     value_raw
   end
-  
+
   # sets up the sensor port
   def set_mode
     @nxt.set_input_mode(
@@ -59,7 +59,7 @@ class Commands::SoundSensor
       NXTComm::PCTFULLSCALEMODE
     )
   end
-  
+
   # attempt to return the input_value requested
   def method_missing(cmd)
     @nxt.get_input_values(NXTComm.const_get("SENSOR_#{@port}"))[cmd]

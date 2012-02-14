@@ -14,44 +14,44 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-require "nxt_comm"
+# require "nxt_comm"
 require "ultrasonic_comm"
 require "commands/mixins/sensor"
 
 # Implements the "Ultrasonic Sensor" block in NXT-G
 class Commands::UltrasonicSensor
-  
+
   include Commands::Mixins::Sensor
-  
+
   # Exception thrown by distance! when the sensor cannot determine the distance.
   class UnmeasurableDistance < Exception; end
-  
+
   attr_reader :port
   attr_accessor :mode, :trigger_point, :comparison
-  
-  def initialize(nxt)
+
+  def initialize(nxt,port=4,mode=:inches)
     @nxt      = nxt
-    
+
     # defaults the same as NXT-G
-    @port           = 4
+    @port           = port
     @trigger_point  = 50
     @comparison     = "<"
-    @mode           = :inches
+    @mode           = mode
     set_mode
   end
-  
+
   # returns distance in requested mode (:inches or :centimeters)
   def distance
     @nxt.ls_write(NXTComm.const_get("SENSOR_#{@port}"), UltrasonicComm.read_measurement_byte(0))
-    
-    # Keep checking until we have data to read
-    while @nxt.ls_get_status(NXTComm.const_get("SENSOR_#{@port}")) < 1
-      sleep(0.1)
-      # TODO: implement timeout so we don't get stuck if the expected data never comes
-    end
-    
-    distance = @nxt.ls_read(NXTComm.const_get("SENSOR_#{@port}"))[:data][0]
-    
+
+    # # Keep checking until we have data to read
+    # while @nxt.ls_get_status(NXTComm.const_get("SENSOR_#{@port}")).to_i < 1
+      # sleep(0.1)
+      # # TODO: implement timeout so we don't get stuck if the expected data never comes
+    # end
+
+    distance = @nxt.ls_read(NXTComm.const_get("SENSOR_#{@port}"))[:data].unpack('C')[0]
+
     if @mode == :centimeters
       distance.to_i
     else
@@ -59,7 +59,7 @@ class Commands::UltrasonicSensor
     end
   end
   alias value_scaled distance
-  
+
   # returns the distance in requested mode; raises an UnmeasurableDistance exception
   # when the distance cannot be measured (i.e. when the distance == 255, which is
   # the code the sensor returns when it cannot get a distance reading)
@@ -68,7 +68,7 @@ class Commands::UltrasonicSensor
     raise UnmeasurableDistance if d == 255
     return d
   end
-  
+
   # sets up the sensor port
   def set_mode
     @nxt.set_input_mode(

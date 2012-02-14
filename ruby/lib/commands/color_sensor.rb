@@ -18,60 +18,99 @@ require "commands/mixins/sensor"
 # require "nxt_comm"
 
 # Implements (and extens) the "Light Sensor" block in NXT-G
-class Commands::LightSensor
+class Commands::ColorSensor
 
   include Commands::Mixins::Sensor
 
-  attr_reader :port, :generate_light
+  attr_reader :port, :color_mode
   attr_accessor :trigger_point, :comparison
 
-  def initialize(nxt)
+  def initialize(nxt,port=3)
     @nxt      = nxt
 
     # defaults the same as NXT-G
-    @port           = 3
+    @port           = port
     @trigger_point  = 50
     @comparison     = ">"
-    @generate_light = true
+    @color_mode = NXTComm::COLORFULL
     set_mode
   end
 
-  # Turns off the sensor's LED light.
-  def ambient_mode
-    self.generate_light = false
+  def green_only
+    self.color_mode = NXTComm::COLORGREEN
   end
 
-  # Turns on the sensor's LED light.
-  def illuminated_mode
-    self.generate_light = true
+  def red_only
+    self.color_mode = NXTComm::COLORRED
   end
+
+  def blue_only
+    self.color_mode = NXTComm::COLORBLUE
+  end
+
+  def all_colors
+    self.color_mode = NXTComm::COLORFULL
+  end
+
+  def light_sensor
+    self.color_mode = NXTComm::COLORNONE
+  end
+
 
   # Turns the sensor's LED on or off.
   # Takes true or false as the argument; if true, light will be turned on,
   # if false, light will be turned off.
-  def generate_light=(on)
-    @generate_light = on
+  def color_mode=(mode)
+    @color_mode = mode
     set_mode
   end
 
-  # intensity of light detected 0-100 in %
-  def intensity
-    value_scaled
+  def current_color
+    case value_scaled
+    when NXTComm::BLACK
+      "black"
+    when NXTComm::BLUE
+      "blue"
+    when NXTComm::GREEN
+      "green"
+    when NXTComm::YELLOW
+      "yellow"
+    when NXTComm::RED
+      "red"
+    when NXTComm::WHITE
+      "white"
+    else
+      raise "Unrecognized color value: #{value_scaled}"
+    end
   end
-  alias light_level intensity
 
-  # returns the raw value of the sensor
-  def raw_value
-    value_raw
+  def current_rgb_value
+    rgb_values = {}
+
+    red_only
+    rgb_values[:red] = value_scaled
+
+    green_only
+    rgb_values[:green] = value_scaled
+
+    blue_only
+    rgb_values[:blue] = value_scaled
+
+    rgb_values
+  end
+
+  def light_intensity
+    light_sensor
+    value_scaled
   end
 
   # sets up the sensor port
   def set_mode
-    @generate_light ? mode = NXTComm::LIGHT_ACTIVE : mode = NXTComm::LIGHT_INACTIVE
+    mode = @color_mode
     @nxt.set_input_mode(
       NXTComm.const_get("SENSOR_#{@port}"),
       mode,
-      NXTComm::PCTFULLSCALEMODE
+      NXTComm::RAWMODE
     )
   end
 

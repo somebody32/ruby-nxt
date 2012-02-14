@@ -14,13 +14,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-require "nxt_comm"
+# require "nxt_comm"
 require "commands/mixins/motor"
 
 # Implements the "Motor" block in NXT-G
 class Commands::Motor
-  
-  include Commands::Mixins::Motor 
+
+  include Commands::Mixins::Motor
 
   attr_accessor :port
   attr_accessor :direction
@@ -30,10 +30,10 @@ class Commands::Motor
   attr_accessor :control_power
   attr_accessor :wait
   attr_accessor :next_action
-  
+
   def initialize(nxt = NXTComm.new($DEV))
     @nxt          = nxt
-    
+
     # defaults the same as NXT-G
     @port           = :a
     @direction      = :forward
@@ -44,7 +44,7 @@ class Commands::Motor
     @wait           = false
     @next_action    = :brake
   end
-  
+
   # execute the Motor command based on the properties specified
   def start
     @nxt.reset_motor_position(NXTComm.const_get("MOTOR_#{@port.to_s.upcase}"))
@@ -67,7 +67,7 @@ class Commands::Motor
     else
       reg_mode = NXTComm::REGULATION_MODE_IDLE
     end
-    
+
     if @duration
       if @duration[:degrees] or @duration[:seconds]
         case @action
@@ -90,7 +90,7 @@ class Commands::Motor
       run_state,
       tacho_limit
     )
-    
+
     if (@duration and @duration[:seconds]) or @wait
       if @duration and @duration[:seconds]
         sleep(@duration[:seconds])
@@ -102,7 +102,7 @@ class Commands::Motor
       self.stop
     end
   end
-  
+
   # stop the Motor command based on the next_action property
   def stop
     if @next_action == :brake
@@ -127,10 +127,10 @@ class Commands::Motor
       )
     end
   end
-  
+
   # attempt to return the output_state requested
   def method_missing(cmd)
     @nxt.get_output_state(NXTComm.const_get("MOTOR_#{@port.to_s.upcase}"))[cmd]
   end
-  
+
 end
